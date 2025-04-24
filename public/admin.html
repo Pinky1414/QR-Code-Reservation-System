@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="adminStyle.css">
+</head>
+
+<body>
+
+    <h1>Admin Dashboard</h1>
+
+    <button onclick="window.location.href='indexPage.html'" style="padding: 8px 16px; background-color: #28a745; color: white; border: none; cursor: pointer; margin-bottom: 20px;">
+        Go to Index Page
+    </button>
+
+    <div class="filter-section">
+        <label for="filterStatus">Filter by Status:</label>
+        <select id="filterStatus" onchange="filterReservations()">
+            <option value="all">All</option>
+            <option value="approved">Approved</option>
+            <option value="denied">Denied</option>
+            <option value="pending">Pending</option>
+        </select>
+
+        <button onclick="sortReservations()">Sort by Date</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="reservationsTable">
+            <!-- Reservations populate here -->
+        </tbody>
+    </table>
+
+    <div class="blackout-section">
+        <h2>Manage Blackout Dates</h2>
+        <input type="date" id="blackoutDate">
+        <div class="time-slot-container" id="blackoutTimeButtons">
+            <!-- Time slot buttons injected here -->
+        </div>
+        <button id="addBlackoutButton" onclick="openBlackoutModal(document.getElementById('blackoutDate').value)">Add Blackout Date</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time Slot</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="blackoutTable">
+                <!-- Blackout dates populate here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Time Slot Selection Modal -->
+    <div id="blackoutModal" class="modal">
+        <div class="modal-content">
+            <h3>Select Time Slots for Blackout</h3>
+            <p style="font-size: 0.9rem; color: gray;">These will be marked as 'admin' reservations and blocked on the calendar.</p>
+            <div id="blackoutTimeSlotList" style="text-align:left; margin-bottom: 10px;"></div>
+            <button onclick="submitBlackoutSelection()">Confirm</button>
+            <button onclick="closeBlackoutModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <p id="confirmationMessage"></p>
+            <button id="confirmAction">Yes</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="loadingOverlay">
+        <div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <button id="darkModeToggle" style="position: fixed; top: 20px; right: 20px;">🌙 Toggle Dark Mode</button>
+
+    <script src="admin.js"></script>
+
+</body>
+
+</html>

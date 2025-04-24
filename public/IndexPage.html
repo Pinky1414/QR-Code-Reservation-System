@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Room Reservation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Conference Room Reservation</h1>
+    </header>
+
+    <main>
+        <button id="adminLoginButton" style="display: none;" onclick="window.location.href='admin-login.html'">Admin Login</button>
+        <script>
+            // Check if the user is an admin
+            async function checkAdmin() {
+                try {
+                    const response = await fetch('http://localhost:3000/check-admin', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.isAdmin) {
+                        document.getElementById('adminLoginButton').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error("Admin check failed:", error);
+                }
+            }
+            checkAdmin();
+        </script>
+
+        <form id="reservationForm">
+            <label for="name">Full Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="date">Reservation Date:</label>
+            <input type="date" id="date" name="date" required>
+
+            <script>
+                // Prevent selecting past dates
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('date').setAttribute('min', today);
+            </script>
+
+            <label>Time Slots:</label>
+            <div class="time-slot-container" id="timeSlotButtons">
+                <!-- Buttons will be added by JS -->
+            </div>
+
+            <!-- New Reason Dropdown -->
+            <label for="reason">Reason for Reservation:</label>
+            <select id="reason" name="reason" required>
+                <option value="">-- Select a Reason --</option>
+                <option value="faculty meeting">Faculty Meeting</option>
+                <option value="interviews">Interviews</option>
+                <option value="student meetings">Student Meetings</option>
+                <option value="other">Other</option>
+            </select>
+
+            <button type="submit">Submit Reservation</button>
+        </form>
+
+        <p id="message"></p>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        const timeSlots = [
+            "8AM-9AM", "9AM-10AM", "10AM-11AM", "11AM-12PM",
+            "12PM-1PM", "1PM-2PM", "2PM-3PM", "3PM-4PM", "4PM-5PM",
+            "5PM-6PM","6PM-7PM","7PM-8PM","8PM-9PM"
+        ];
+
+        const container = document.getElementById("timeSlotButtons");
+
+        // Dynamically generate buttons
+        timeSlots.forEach(slot => {
+            const btn = document.createElement("div");
+            btn.className = "time-slot-button";
+            btn.textContent = slot;
+            btn.setAttribute("data-slot", slot);
+
+            btn.addEventListener("click", () => {
+                btn.classList.toggle("active");
+            });
+
+            container.appendChild(btn);
+        });
+
+        // On form submit, collect selected slots
+        document.getElementById("reservationForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const selectedSlots = Array.from(document.querySelectorAll(".time-slot-button.active"))
+                .map(btn => btn.getAttribute("data-slot"));
+
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const date = document.getElementById("date").value;
+            const reason = document.getElementById("reason").value;
+
+            if (!name || !email || !date || selectedSlots.length === 0 || !reason) {
+                document.getElementById("message").textContent = "All fields are required!";
+                document.getElementById("message").style.color = "red";
+                return;
+            }
+
+            // Submit reservation
+            fetch("http://localhost:3000/reserve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    date,
+                    time_slot: selectedSlots,  // Now sends as an array
+                    reason
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    document.getElementById("message").textContent = "Reservation submitted!";
+                    document.getElementById("message").style.color = "green";
+                    document.getElementById("reservationForm").reset();
+                    document.querySelectorAll(".time-slot-button").forEach(b => b.classList.remove("active"));
+                })
+                .catch(err => {
+                    document.getElementById("message").textContent = err.message;
+                    document.getElementById("message").style.color = "red";
+                });
+        });
+    </script>
+</body>
+</html>
