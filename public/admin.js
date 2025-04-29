@@ -9,8 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         showLoading();
         fetchReservations(token);
-        loadBlackoutDates();
         renderBlackoutTimeCheckboxes();
+        loadBlackoutDates();
     }
 
     if (localStorage.getItem("darkMode") === "true") {
@@ -54,7 +54,10 @@ function fetchReservations(token) {
         headers: { "Authorization": `Bearer ${token}` }
     })
         .then(res => res.json())
-        .then(data => displayReservations(data))
+        .then(data => {
+            window.reservationData = data; // Save globally for filtering
+            displayReservations(data);
+        })
         .catch(err => alert("Error fetching reservations: " + err))
         .finally(() => hideLoading());
 }
@@ -75,7 +78,7 @@ function displayReservations(reservations) {
             <td>
                 <button onclick="showConfirmation(${res.id}, 'approved')">Approve</button>
                 <button onclick="showConfirmation(${res.id}, 'denied')">Deny</button>
-                <button onclick="confirmDeleteBlackout(${res.id})">Delete</button>
+                <button onclick="confirmDeleteReservation(${res.id})">Delete</button>
             </td>`;
         table.appendChild(row);
     });
@@ -102,6 +105,21 @@ function updateReservation(id, status) {
         .finally(() => hideLoading());
 }
 
+function confirmDeleteReservation(id) {
+    openModal('delete', "Are you sure you want to delete this reservation?", () => deleteReservation(id));
+}
+
+function deleteReservation(id) {
+    const token = localStorage.getItem("token");
+
+    fetch(`http://localhost:3000/delete-reservation/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+        .then(() => fetchReservations(token))
+        .catch(err => alert("Failed to delete reservation."));
+}
+
 function sortReservations() {
     const tableBody = document.getElementById("reservationsTable");
     const rows = Array.from(tableBody.rows);
@@ -115,17 +133,24 @@ function sortReservations() {
     tableBody.innerHTML = "";
     rows.forEach(row => tableBody.appendChild(row));
 }
-
 function filterReservations() {
     const selectedStatus = document.getElementById("filterStatus").value;
+    const selectedReason = document.getElementById("filterReason").value;
     const rows = document.querySelectorAll("#reservationsTable tr");
 
     rows.forEach(row => {
         const statusCell = row.querySelector(".status");
-        if (!statusCell) return;
+        const reasonCell = row.cells[4]; // 5th column = reason
+
+        if (!statusCell || !reasonCell) return;
 
         const status = statusCell.textContent.toLowerCase();
-        row.style.display = (selectedStatus === "all" || status === selectedStatus) ? "" : "none";
+        const reason = reasonCell.textContent.toLowerCase();
+
+        const matchesStatus = selectedStatus === "all" || status === selectedStatus;
+        const matchesReason = selectedReason === "all" || reason === selectedReason;
+
+        row.style.display = (matchesStatus && matchesReason) ? "" : "none";
     });
 }
 
@@ -165,7 +190,6 @@ function submitBlackoutSelection() {
         return;
     }
 
-    // New: Create admin-style reservations instead of blackout table
     const blackoutReservations = selectedTimes.map(time =>
         fetch("http://localhost:3000/reserve", {
             method: "POST",
@@ -184,7 +208,7 @@ function submitBlackoutSelection() {
         .then(() => {
             alert("Blackout time slots reserved successfully!");
             closeBlackoutModal();
-            fetchReservations(localStorage.getItem("token")); // Refresh list
+            fetchReservations(localStorage.getItem("token"));
         })
         .catch(err => {
             console.error("Failed to create blackout reservations:", err);
@@ -192,24 +216,8 @@ function submitBlackoutSelection() {
         });
 }
 
-
 function loadBlackoutDates() {
     fetchReservations(localStorage.getItem("token"));
-}
-
-function confirmDeleteBlackout(id) {
-    openModal('blackout', "Are you sure you want to delete this reservation?", () => deleteBlackoutDate(id));
-}
-
-function deleteBlackoutDate(id) {
-    fetch(`http://localhost:3000/reservations/${id}`, {
-        method: "DELETE",
-        headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`
-        }
-    })
-        .then(() => fetchReservations(localStorage.getItem("token")))
-        .catch(err => alert("Failed to delete reservation."));
 }
 
 document.getElementById("darkModeToggle").addEventListener("click", () => {
