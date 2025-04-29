@@ -1,0 +1,10 @@
+# pack-refs with: peeled fully-peeled sorted 
+6bea4185eb94a96fea61c04788ab0e6ac18777f5 refs/heads/Up-to-date-branch
+898c0c7c2b2db9ee986298d8638db95c1b435e52 refs/heads/VS2022Branch
+b9e9cb4e109a88b7e50c2778741dad276ddd11af refs/heads/main
+b16201e566256b7f31a6f30c120452c65e6a8248 refs/pull/1/head
+898c0c7c2b2db9ee986298d8638db95c1b435e52 refs/pull/2/head
+0f021530008f767f8234b8c78dd46c1f4f7481ef refs/pull/3/head
+8690f803995a62108bd5484531af323b500efccc refs/pull/4/head
+27571757ffbc3db2349bbc1943f12a32f88853e3 refs/pull/5/head
+6bea4185eb94a96fea61c04788ab0e6ac18777f5 refs/pull/6/head

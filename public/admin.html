@@ -25,6 +25,16 @@
             <option value="pending">Pending</option>
         </select>
 
+        <label for="filterReason">Filter by Reason:</label>
+        <select id="filterReason" onchange="filterReservations()">
+            <option value="all">All</option>
+            <option value="admin">Admin</option>
+            <option value="faculty meeting">Faculty Meeting</option>
+            <option value="interviews">Interviews</option>
+            <option value="student meetings">Student Meetings</option>
+            <option value="other">Other</option>
+        </select>
+
         <button onclick="sortReservations()">Sort by Date</button>
     </div>
 
@@ -52,26 +62,12 @@
             <!-- Time slot buttons injected here -->
         </div>
         <button id="addBlackoutButton" onclick="openBlackoutModal(document.getElementById('blackoutDate').value)">Add Blackout Date</button>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Time Slot</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="blackoutTable">
-                <!-- Blackout dates populate here -->
-            </tbody>
-        </table>
     </div>
 
     <!-- Time Slot Selection Modal -->
     <div id="blackoutModal" class="modal">
         <div class="modal-content">
             <h3>Select Time Slots for Blackout</h3>
-            <p style="font-size: 0.9rem; color: gray;">These will be marked as 'admin' reservations and blocked on the calendar.</p>
             <div id="blackoutTimeSlotList" style="text-align:left; margin-bottom: 10px;"></div>
             <button onclick="submitBlackoutSelection()">Confirm</button>
             <button onclick="closeBlackoutModal()">Cancel</button>

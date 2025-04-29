@@ -79,6 +79,24 @@ app.get('/reservations', authenticateAdmin, (req, res) => {
     });
 });
 
+// Delete a reservation by ID (Admin Only)
+app.delete('/delete-reservation/:id', authenticateAdmin, (req, res) => {
+    const { id } = req.params;
+
+    const sql = "DELETE FROM reservations WHERE id = ?";
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: "Database error", details: err });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Reservation not found." });
+        }
+
+        res.json({ message: "Reservation deleted successfully!" });
+    });
+});
+
 app.get('/public-reservations', (req, res) => {
     db.query("SELECT * FROM reservations WHERE status = 'approved'", (err, results) => {
         if (err) {
