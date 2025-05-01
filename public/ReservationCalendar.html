@@ -11,6 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS (for modal functionality) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom Styles -->
     <link rel="stylesheet" href="CalendarStyles.css">
 </head>
@@ -20,7 +22,7 @@
         <div id="calendar"></div>
     </div>
 
-    <!-- Time Slot Modal -->
+    <!-- Time Slot Selection Modal -->
     <div id="timeSlotModal" class="modal-custom">
         <div class="modal-content-custom">
             <h5 id="modalDate"></h5>
@@ -32,9 +34,36 @@
                 <option value="other">Other</option>
             </select>
             <div id="timeSlotContainer" class="d-flex flex-column gap-2"></div>
-            <button class="btn btn-secondary mt-3" onclick="closeTimeSlotModal()">Cancel</button>
+            <button class="btn btn-primary mt-3" id="submitTimeSlotsBtn">Submit Selected Slots</button>
+            <button class="btn btn-secondary mt-2" onclick="closeTimeSlotModal()">Cancel</button>
         </div>
     </div>
+
+    <!-- Name/Email Modal -->
+    <div class="modal fade" id="userInfoModal" tabindex="-1" aria-labelledby="userInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userInfoModalLabel">Complete Reservation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userInfoForm">
+                        <div class="mb-3">
+                            <label for="userName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="userName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="userEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="userEmail" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Confirm Reservation</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="Calendar.js"></script>
 </body>
 </html>

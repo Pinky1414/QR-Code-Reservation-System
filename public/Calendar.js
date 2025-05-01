@@ -1,38 +1,44 @@
-// JavaScript source code
 const allTimeSlots = [
     "8AM-9AM", "9AM-10AM", "10AM-11AM", "11AM-12PM",
     "12PM-1PM", "1PM-2PM", "2PM-3PM", "3PM-4PM", "4PM-5PM",
     "5PM-6PM", "6PM-7PM", "7PM-8PM", "8PM-9PM"
 ];
 
+let selectedDate = null;
+let selectedSlots = [];
+
 function closeTimeSlotModal() {
     document.getElementById("timeSlotModal").style.display = "none";
+    selectedSlots = [];
 }
 
-function reserveSlot(date, slot) {
-    const name = prompt("Enter your full name:");
-    const email = prompt("Enter your email:");
-    const reason = document.getElementById("reservationReason").value;
-    if (!name || !email) return;
+function reserveSlotsBatch(date, name, email, reason) {
+    const promises = selectedSlots.map(slot => {
+        return fetch("http://localhost:3000/reserve", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, date, time_slot: slot, reason })
+        });
+    });
 
-    //Make Reservations 
-    fetch("http://localhost:3000/reserve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, date, time_slot: slot, reason })
-    })
-        .then(res => res.json())
-        .then(data => {
-            alert("Reservation successful!");
+    Promise.all(promises)
+        .then(() => {
+            alert("Reservation(s) successful!");
             closeTimeSlotModal();
+            document.getElementById("userInfoForm").reset();
+            const modal = bootstrap.Modal.getInstance(document.getElementById("userInfoModal"));
+            modal.hide();
             location.reload();
         })
         .catch(err => {
-            alert("Error making reservation: " + err.message);
+            alert("Error making reservations: " + err.message);
         });
 }
 
 function selectDate(date) {
+    selectedDate = date;
+    selectedSlots = [];
+
     fetch(`http://localhost:3000/reservations-by-date?date=${date}`)
         .then(res => res.json())
         .then(data => {
@@ -51,13 +57,21 @@ function selectDate(date) {
 
                 const btn = document.createElement("button");
                 btn.textContent = slot;
-                btn.className = "time-slot-btn";
+                btn.className = "btn btn-outline-primary";
 
                 if (isReserved || isAdminBlocked) {
-                    btn.classList.add("disabled");
+                    btn.classList.add("disabled", "btn-secondary");
                     btn.disabled = true;
                 } else {
-                    btn.onclick = () => reserveSlot(date, slot);
+                    btn.onclick = () => {
+                        if (selectedSlots.includes(slot)) {
+                            selectedSlots = selectedSlots.filter(s => s !== slot);
+                            btn.classList.remove("active");
+                        } else {
+                            selectedSlots.push(slot);
+                            btn.classList.add("active");
+                        }
+                    };
                 }
 
                 container.appendChild(btn);
@@ -66,6 +80,38 @@ function selectDate(date) {
             document.getElementById("timeSlotModal").style.display = "flex";
         });
 }
+
+document.getElementById("submitTimeSlotsBtn").addEventListener("click", () => {
+    if (selectedSlots.length === 0) {
+        alert("Please select at least one time slot.");
+        return;
+    }
+
+    const reason = document.getElementById("reservationReason").value;
+    if (reason === "") {
+        alert("Please select a reason.");
+        return;
+    }
+
+    // Show name/email modal
+    const modal = new bootstrap.Modal(document.getElementById("userInfoModal"));
+    modal.show();
+});
+
+document.getElementById("userInfoForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById("userName").value.trim();
+    const email = document.getElementById("userEmail").value.trim();
+    const reason = document.getElementById("reservationReason").value;
+
+    if (!name || !email) {
+        alert("Please enter both your name and email.");
+        return;
+    }
+
+    reserveSlotsBatch(selectedDate, name, email, reason);
+});
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -85,11 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         grouped[key].push(res.time_slot);
                     });
 
-                    const timeOrder = [
-                        "8AM-9AM", "9AM-10AM", "10AM-11AM", "11AM-12PM",
-                        "12PM-1PM", "1PM-2PM", "2PM-3PM", "3PM-4PM",
-                        "4PM-5PM", "5PM-6PM", "6PM-7PM", "7PM-8PM", "8PM-9PM"
-                    ];
+                    const timeOrder = allTimeSlots;
 
                     const concatEvents = [];
                     for (const key in grouped) {
@@ -134,13 +176,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 .catch(error => failureCallback(error));
         },
         dateClick: function (info) {
-            const selectedDate = info.dateStr;
-            const today = new Date().toISOString().split("T")[0];
-            if (selectedDate <= today) {
+            const dateStr = info.dateStr;
+            const todayStr = new Date().toISOString().split("T")[0];
+            if (dateStr <= todayStr) {
                 alert("Same-day and past reservations are not allowed.");
                 return;
             }
-            selectDate(selectedDate);
+            selectDate(dateStr);
         }
     });
 
