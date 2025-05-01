@@ -122,6 +122,18 @@ app.get('/reservations-by-date', (req, res) => {
     });
 });
 
+
+const cron = require("node-cron");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: "atu.reservations@gmail.com",
+        pass: "gjnitzedoxafytku"
+    }
+});
+
 app.post('/reserve', (req, res) => {
     const { name, email, date, time_slot, reason } = req.body;
 
@@ -155,7 +167,6 @@ app.post('/reserve', (req, res) => {
         if (err) {
             return res.status(500).json({ error: "Database error", details: err });
         }
-
         if (results.length > 0) {
             return res.status(400).json({ error: "This time slot is already booked for the selected date." });
         }
@@ -169,6 +180,30 @@ app.post('/reserve', (req, res) => {
             if (err) {
                 return res.status(500).json({ error: "Database error", details: err });
             }
+
+            // Send confirmation email
+            const mailOptions = {
+                from: '"ATU Reservations" <your-email@gmail.com>',
+                to: email,
+                subject: "Reservation Submission Confirmation",
+                text: `Dear ${name},
+
+Thank you for your reservation request for ${date} during ${time_slot}. Your request has been received and will be reviewed within 24 hours.
+
+If you have any questions or need to make changes, please contact the admin at admin@atu.edu.
+
+Best regards,
+ATU Reservations Team`
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error("Email error:", error);
+                } else {
+                    console.log("Confirmation email sent:", info.response);
+                }
+            });
+
             res.json({ message: "Reservation request submitted successfully!" });
         });
     });
@@ -218,17 +253,6 @@ app.delete('/delete-blackout/:id', authenticateAdmin, (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-});
-
-const cron = require("node-cron");
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: "atu.reservations@gmail.com",
-        pass: "gjnitzedoxafytku"
-    }
 });
 
 function sendPendingEmailSummary() {

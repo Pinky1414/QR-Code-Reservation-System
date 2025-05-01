@@ -1,105 +1,104 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Conference Room Reservation</title>
-    <link rel="stylesheet" href="style.css">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet" />
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header>
-        <h1>Conference Room Reservation</h1>
+    <header class="bg-success text-white text-center py-3 mb-4">
+        <h1 class="h3">Conference Room Reservation</h1>
     </header>
 
-    <main>
-        <button id="adminLoginButton" style="display: none;" onclick="window.location.href='admin-login.html'">Admin Login</button>
-        <script>
-            // Check if the user is an admin
-            async function checkAdmin() {
-                try {
-                    const response = await fetch('http://localhost:3000/check-admin', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('token')
-                        }
-                    });
-                    const data = await response.json();
-                    if (data.isAdmin) {
-                        document.getElementById('adminLoginButton').style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error("Admin check failed:", error);
-                }
-            }
-            checkAdmin();
-        </script>
+    <main class="container">
+        <div class="text-end mb-3">
+            <button id="adminLoginButton"
+                    class="btn btn-outline-secondary"
+                    style="display: none;"
+                    onclick="window.location.href='admin-login.html'">
+                Admin Login
+            </button>
+        </div>
 
-        <form id="reservationForm">
-            <label for="name">Full Name:</label>
-            <input type="text" id="name" name="name" required>
-
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="date">Reservation Date:</label>
-            <input type="date" id="date" name="date" required>
-
-            <script>
-                // Prevent selecting past dates
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('date').setAttribute('min', today);
-            </script>
-
-            <label>Time Slots:</label>
-            <div class="time-slot-container" id="timeSlotButtons">
-                <!-- Buttons will be added by JS -->
+        <form id="reservationForm" class="card p-4 shadow-sm mx-auto" style="max-width: 500px;">
+            <div class="mb-3">
+                <label for="name" class="form-label">Full Name:</label>
+                <input type="text" id="name" name="name" class="form-control" required />
             </div>
 
-            <!-- New Reason Dropdown -->
-            <label for="reason">Reason for Reservation:</label>
-            <select id="reason" name="reason" required>
-                <option value="">-- Select a Reason --</option>
-                <option value="faculty meeting">Faculty Meeting</option>
-                <option value="interviews">Interviews</option>
-                <option value="student meetings">Student Meetings</option>
-                <option value="other">Other</option>
-            </select>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <input type="email" id="email" name="email" class="form-control" required />
+            </div>
 
-            <button type="submit">Submit Reservation</button>
+            <div class="mb-3">
+                <label for="date" class="form-label">Reservation Date:</label>
+                <input type="date" id="date" name="date" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Time Slots:</label>
+                <div class="d-flex flex-wrap gap-2" id="timeSlotButtons"></div>
+            </div>
+
+            <div class="mb-3">
+                <label for="reason" class="form-label">Reason for Reservation:</label>
+                <select id="reason" name="reason" class="form-select" required>
+                    <option value="">-- Select a Reason --</option>
+                    <option value="faculty meeting">Faculty Meeting</option>
+                    <option value="interviews">Interviews</option>
+                    <option value="student meetings">Student Meetings</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">Submit Reservation</button>
+            <p id="message" class="mt-3 fw-bold"></p>
         </form>
-
-        <p id="message"></p>
     </main>
+
+    <!-- Bootstrap JS (optional if you're not using dropdowns/tooltips/etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="script.js"></script>
     <script>
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+
         const timeSlots = [
             "8AM-9AM", "9AM-10AM", "10AM-11AM", "11AM-12PM",
             "12PM-1PM", "1PM-2PM", "2PM-3PM", "3PM-4PM", "4PM-5PM",
-            "5PM-6PM","6PM-7PM","7PM-8PM","8PM-9PM"
+            "5PM-6PM", "6PM-7PM", "7PM-8PM", "8PM-9PM"
         ];
 
         const container = document.getElementById("timeSlotButtons");
 
-        // Dynamically generate buttons
         timeSlots.forEach(slot => {
-            const btn = document.createElement("div");
-            btn.className = "time-slot-button";
+            const btn = document.createElement("button");
+            btn.className = "btn btn-outline-secondary btn-sm";
             btn.textContent = slot;
+            btn.type = "button";
             btn.setAttribute("data-slot", slot);
 
             btn.addEventListener("click", () => {
                 btn.classList.toggle("active");
+                btn.classList.toggle("btn-success");
+                btn.classList.toggle("btn-outline-secondary");
             });
 
             container.appendChild(btn);
         });
 
-        // On form submit, collect selected slots
-        document.getElementById("reservationForm").addEventListener("submit", (e) => {
+        document.getElementById("reservationForm").addEventListener("submit", async (e) => {
             e.preventDefault();
 
-            const selectedSlots = Array.from(document.querySelectorAll(".time-slot-button.active"))
+            const selectedSlots = Array.from(document.querySelectorAll(".btn.active"))
                 .map(btn => btn.getAttribute("data-slot"));
 
             const name = document.getElementById("name").value.trim();
@@ -107,37 +106,60 @@
             const date = document.getElementById("date").value;
             const reason = document.getElementById("reason").value;
 
+            const message = document.getElementById("message");
+
             if (!name || !email || !date || selectedSlots.length === 0 || !reason) {
-                document.getElementById("message").textContent = "All fields are required!";
-                document.getElementById("message").style.color = "red";
+                message.textContent = "All fields are required!";
+                message.classList.remove("text-success");
+                message.classList.add("text-danger");
                 return;
             }
 
-            // Submit reservation
-            fetch("http://localhost:3000/reserve", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name,
-                    email,
-                    date,
-                    time_slot: selectedSlots,  // Now sends as an array
-                    reason
-                })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.error) throw new Error(data.error);
-                    document.getElementById("message").textContent = "Reservation submitted!";
-                    document.getElementById("message").style.color = "green";
-                    document.getElementById("reservationForm").reset();
-                    document.querySelectorAll(".time-slot-button").forEach(b => b.classList.remove("active"));
-                })
-                .catch(err => {
-                    document.getElementById("message").textContent = err.message;
-                    document.getElementById("message").style.color = "red";
+            try {
+                const response = await fetch("http://localhost:3000/reserve", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, email, date, time_slot: selectedSlots, reason })
                 });
+
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                message.textContent = "Reservation submitted!";
+                message.classList.remove("text-danger");
+                message.classList.add("text-success");
+
+                document.getElementById("reservationForm").reset();
+                document.querySelectorAll(".btn.active").forEach(btn => {
+                    btn.classList.remove("active", "btn-success");
+                    btn.classList.add("btn-outline-secondary");
+                });
+
+            } catch (err) {
+                message.textContent = err.message;
+                message.classList.remove("text-success");
+                message.classList.add("text-danger");
+            }
         });
+
+        // Admin check
+        async function checkAdmin() {
+            try {
+                const response = await fetch('http://localhost:3000/check-admin', {
+                    method: 'GET',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+                });
+                const data = await response.json();
+                if (data.isAdmin) {
+                    document.getElementById('adminLoginButton').style.display = 'inline-block';
+                }
+            } catch (error) {
+                console.error("Admin check failed:", error);
+            }
+        }
+
+        checkAdmin();
     </script>
 </body>
 </html>
