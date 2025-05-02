@@ -136,23 +136,23 @@ const transporter = nodemailer.createTransport({
 
 app.post('/reserve', (req, res) => {
     const { name, email, date, time_slot, reason } = req.body;
-
+    //Check to see if all slots are inputed
     if (!name || !email || !date || !time_slot || !reason) {
         return res.status(400).json({ error: "All fields (name, email, date, time_slot, reason) are required." });
     }
-
+    //Checks if it is an email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         return res.status(400).json({ error: "Invalid email format." });
     }
-
+    //Ensures users can't make past date reservations
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const selectedDate = new Date(date);
     if (selectedDate < today) {
         return res.status(400).json({ error: "Reservation date must be in the future." });
     }
-
+    //Validating time slots
     const validTimeSlots = [
         "8AM-9AM", "9AM-10AM", "10AM-11AM", "11AM-12PM",
         "12PM-1PM", "1PM-2PM", "2PM-3PM", "3PM-4PM", "4PM-5PM",
@@ -161,7 +161,7 @@ app.post('/reserve', (req, res) => {
     if (!validTimeSlots.includes(time_slot)) {
         return res.status(400).json({ error: "Invalid time slot selected." });
     }
-
+    //Checks to see if there are reservations for the time slots
     const checkDuplicateSql = "SELECT * FROM reservations WHERE date = ? AND time_slot = ?";
     db.query(checkDuplicateSql, [date, time_slot], (err, results) => {
         if (err) {
